@@ -1,4 +1,5 @@
 import os
+import time
 from glob import glob
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -11,6 +12,8 @@ from common.envs_utils import make_env
 from common.render_utils import StatsVisualizer
 from common.sacred_utils import load_configs
 from symmetry.env_utils import register_symmetric_env
+
+import symmetry.sym_envs
 
 
 def main():

@@ -1,5 +1,6 @@
 import math
 import time
+import argparse
 
 
 def as_minutes(s):
@@ -35,3 +36,15 @@ class StringEnum(tuple):
     def __getattr__(self, attr):
         if attr in self:
             return attr
+
+
+def str2bool(v):
+    """
+    Argument Parse helper function for boolean values
+    """
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
