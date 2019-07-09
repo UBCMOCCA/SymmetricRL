@@ -32,8 +32,6 @@ from common.sacred_utils import ex, init, seed_all
 
 from symmetry.net import SymmetricNet, SymmetricVNet
 
-import symmetry.sym_envs
-
 MirrorMethods = StringEnum(["none", "net", "traj", "loss"])
 
 

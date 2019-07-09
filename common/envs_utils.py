@@ -20,6 +20,7 @@ import numpy as np
 import torch
 
 import mocca_envs
+import symmetry.sym_envs
 
 
 def make_env_fns(env_id, seed, rank, log_dir):

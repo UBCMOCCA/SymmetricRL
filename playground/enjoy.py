@@ -16,8 +16,6 @@ from symmetry.env_utils import register_symmetric_env
 def main():
     args = load_configs()
     env_name = args.env_name
-    if args.mirror_method is not None:
-        env_name = register_symmetric_env(env_name)
 
     env = make_env(env_name, render=True)
     env.seed(1093)
