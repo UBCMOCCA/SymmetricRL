@@ -30,15 +30,16 @@ from common.misc_utils import (
 from common.csv_utils import ConsoleCSVLogger
 from common.sacred_utils import ex, init, seed_all
 
-from symmetry.env_utils import register_symmetric_env
 from symmetry.net import SymmetricNet, SymmetricVNet
+
+import symmetry.sym_envs
 
 MirrorMethods = StringEnum(["none", "net", "traj", "loss"])
 
 
 @ex.config
 def configs():
-    env_name = "pybullet_envs:Walker2DBulletEnv-v0"
+    env_name = "Symmetric_Walker2DBulletEnv-v0"
 
     # mirroring method
     mirror_method = "none"
@@ -86,8 +87,6 @@ def main(_seed, _config, _run):
     args = init(_seed, _config, _run)
 
     env_name = args.env_name
-    if args.mirror_method is not None:
-        env_name = register_symmetric_env(env_name)
 
     dummy_env = make_env(env_name, render=False)
 

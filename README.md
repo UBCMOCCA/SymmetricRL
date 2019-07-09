@@ -4,7 +4,7 @@
 To run an experiment named `test_experiment` with the PyBullet humanoid environment you can run:
 
 ```bash
-./cc_run_scripts/local_run_playground_train.sh  test_experiment  env_name='pybullet_envs:HumanoidBulletEnv-v0'
+./cc_run_scripts/local_run_playground_train.sh  test_experiment  env_name='Symmetric_HumanoidBulletEnv-v0'
 ```
 
 This will create a new experiment directory inside the `runs` directory that contains the following files:

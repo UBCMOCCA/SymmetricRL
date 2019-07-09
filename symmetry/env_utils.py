@@ -5,7 +5,6 @@ import os
 import gym
 import gym.spaces
 import gym.envs
-from .indices import env_mirror_indices
 
 
 class SymmetricEnv(gym.Wrapper):
@@ -124,12 +123,9 @@ def register(id, **kvargs):
         return gym.envs.registration.register(id, **kvargs)
 
 
-def register_symmetric_env(env_id):
+def register_symmetric_env(env_id, mirror_inds):
     def make_sym_env(*args, **kwargs):
-        return SymmetricEnv(
-            env=gym.make(env_id, *args, **kwargs),
-            minds=env_mirror_indices.get(env_id, None),
-        )
+        return SymmetricEnv(env=gym.make(env_id, *args, **kwargs), minds=mirror_inds)
 
     new_id = "Symmetric_%s" % env_id.split(":")[-1]
     register(id=new_id, entry_point=make_sym_env)
