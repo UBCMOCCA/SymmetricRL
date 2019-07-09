@@ -4,12 +4,6 @@ module load python/3.7.0
 python -m venv venv
 source venv/bin/activate
 
-
-# TODO: need to setup the ssh key
-git clone git@github.com:belinghy/rl-experiments.git --recurse-submodules
-cd rl-experiments
-git checkout symmetric
-
 # installing dependencies
 pip install gym
 pip install sacred pymongo GitPython
