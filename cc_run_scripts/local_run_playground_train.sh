@@ -22,5 +22,6 @@ nohup python playground/train.py with experiment_dir="$log_path/" $@ &> $log_pat
 
 PID=$!
 echo "Process spawned with ID: $PID"
+echo "Experiment directory: $log_path"
 echo $PID > $log_path/pid
 
