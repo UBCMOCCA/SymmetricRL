@@ -2,7 +2,8 @@
 set -e
 
 num_replicates=1
-project_path="$HOME/projects/def-vandepan/symmetric/SymmetricRL"
+experiment_path="$HOME/projects/def-vandepan/symmetric"
+project_path="$HOME/projects/def-vandepan/$USER/SymmetricRL"
 today=`date '+%Y_%m_%d__%H_%M_%S'`
 
 name=$1
@@ -13,10 +14,8 @@ then
 fi
 shift;
 
-cd $project_path
-log_path=runs/${today}__${name}
-mkdir -p runs
-mkdir $log_path
+log_path=$experiment_path/runs/${today}__${name}
+mkdir -p $log_path
 cat > $log_path/run_script.sh <<EOF
 #!/bin/bash
 #SBATCH --time=10:00:00
@@ -38,3 +37,4 @@ for ((i=1;i<=$num_replicates;i++)) do
 done
 
 sbatch run_script.sh
+echo "Logging at: $log_path"
