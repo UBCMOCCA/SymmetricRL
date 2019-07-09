@@ -261,4 +261,3 @@ def main(_seed, _config, _run):
                     "stats": {"rew": episode_rewards},
                 }
             )
-
