@@ -27,7 +27,7 @@ cat > $log_path/run_script.sh <<EOF
 #SBATCH --array=1-$num_replicates
 . $project_path/../venv/bin/activate
 cd $project_path
-python playground/train.py with experiment_dir="$log_path/\$SLURM_ARRAY_TASK_ID" replicate_num=\$SLURM_ARRAY_TASK_ID $@
+python -m playground.train with experiment_dir="$log_path/\$SLURM_ARRAY_TASK_ID" replicate_num=\$SLURM_ARRAY_TASK_ID $@
 EOF
 
 cd $log_path
