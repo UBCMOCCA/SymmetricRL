@@ -11,7 +11,7 @@ from collections import OrderedDict
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current_dir)
-os.sys.path.append(parent_dir)
+os.sys.path.insert(0, parent_dir)
 
 import gym
 from gym import spaces
