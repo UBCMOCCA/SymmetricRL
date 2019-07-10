@@ -66,11 +66,13 @@ def configs():
     gae_lambda = 0.95
     lr = 0.0003
 
+    aux_loss_coef = 4
+
     ppo_params = {
         "use_clipped_value_loss": False,
         "num_mini_batch": num_mini_batch,
         "entropy_coef": 0.0,
-        "symmetry_coef": 4 if mirror_method == MirrorMethods.loss else 0,
+        "symmetry_coef": aux_loss_coef if mirror_method == MirrorMethods.loss else 0,
         "value_loss_coef": 1.0,
         "ppo_epoch": 10,
         "clip_param": 0.2,
