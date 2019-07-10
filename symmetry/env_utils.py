@@ -111,9 +111,58 @@ class SymmetricEnv(gym.Wrapper):
         # print(args, kwargs)
         self.env.render(*args, **kwargs)
 
-    def replace_wrapped_env(self, env):
-        # TODO: find a fix not to do this ...
-        return self.env.replace_wrapped_env(env)
+
+class PhaseSymmetryEnv(gym.Wrapper):
+    def __init__(self, env, minds=None, gait_cycle_length=1.5, dt=1 / 60):
+        super().__init__(env)
+        self.gait_cycle_length = gait_cycle_length
+        self.ts_phase_increment = dt / gait_cycle_length
+
+        if isinstance(env, gym.Wrapper):
+            env = env.unwrapped
+
+        if minds is None:
+            minds = env.mirror_indices
+
+        high = np.ones(1 + env.observation_space.shape[0]) * np.inf
+        self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
+        # high = np.ones(co + no + so) * np.inf
+        # self.action_space = gym.spaces.Box(-high, high, dtype=np.float32)
+
+        # observation indices
+        self.neg_obs_inds = minds.get("sideneg_obs_inds", []) + minds.get(
+            "neg_obs_inds", []
+        )
+        self.lr_obs_inds = minds["left_obs_inds"] + minds["right_obs_inds"]
+        self.rl_obs_inds = minds["right_obs_inds"] + minds["left_obs_inds"]
+        # action indices
+        self.neg_act_inds = minds.get("sideneg_act_inds", []) + minds.get(
+            "neg_act_inds", []
+        )
+        self.lr_act_inds = minds["left_act_inds"] + minds["right_act_inds"]
+        self.rl_act_inds = minds["right_act_inds"] + minds["left_act_inds"]
+
+    def reset(self, **kwargs):
+        self.phase = 0 if self.np_random.uniform() < 0.5 else 0.5
+        return self.fix_obs(self.env.reset(**kwargs))
+
+    def step(self, action):
+        self.phase = (self.phase + self.ts_phase_increment) % self.gait_cycle_length
+        if self.phase >= 0.5:
+            action[self.neg_act_inds] *= -1
+            action[self.lr_act_inds] = action[self.rl_act_inds]
+        obs, reward, done, info = self.env.step(action)
+        return self.fix_obs(obs), reward, done, info
+
+    def fix_obs(self, obs):
+        if self.phase >= 0.5:
+            obs[self.neg_obs_inds] *= -1
+            obs[self.lr_obs_inds] = obs[self.rl_obs_inds]
+        return np.concatenate([[self.phase], obs])
+
+    def render(self, *args, **kwargs):
+        # print(args, kwargs)
+        self.env.render(*args, **kwargs)
 
 
 def register(id, **kvargs):
@@ -128,5 +177,19 @@ def register_symmetric_env(env_id, mirror_inds):
         return SymmetricEnv(env=gym.make(env_id, *args, **kwargs), minds=mirror_inds)
 
     new_id = "Symmetric_%s" % env_id.split(":")[-1]
+    register(id=new_id, entry_point=make_sym_env)
+    return new_id
+
+
+def register_phase_env(env_id, mirror_inds, gait_cycle_length, dt):
+    def make_sym_env(*args, **kwargs):
+        return PhaseSymmetryEnv(
+            env=gym.make(env_id, *args, **kwargs),
+            minds=mirror_inds,
+            gait_cycle_length=gait_cycle_length,
+            dt=dt,
+        )
+
+    new_id = "Phase_%s" % env_id.split(":")[-1]
     register(id=new_id, entry_point=make_sym_env)
     return new_id

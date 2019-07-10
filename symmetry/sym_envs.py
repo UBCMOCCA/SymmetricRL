@@ -1,60 +1,68 @@
-from .env_utils import register_symmetric_env
+from .env_utils import register_symmetric_env, register_phase_env
+
+
+walker_mirror_inds = {
+    #### observation:
+    "com_obs_inds": [0, 2, 3, 5, 7],
+    "neg_obs_inds": [1, 4, 6],
+    "left_obs_inds": list(range(8, 14)) + [20],
+    "right_obs_inds": list(range(14, 20)) + [21],
+    "sideneg_obs_inds": [],
+    #### action:
+    "com_act_inds": [],
+    "left_act_inds": list(range(0, 3)),
+    "right_act_inds": list(range(3, 6)),
+    "sideneg_act_inds": [],
+}
+
+humanoid_mirror_inds = {
+    #### observation:
+    "com_obs_inds": [
+        0,  # z
+        2,  # cos(yaw)
+        3,  # vx
+        5,  # vz
+        7,  # pitch
+        # common joints
+        10,
+        11,
+    ],
+    "neg_obs_inds": [
+        1,  # sin(yaw)
+        4,  # vy
+        6,  # roll
+        # neg joints
+        8,
+        9,
+        12,
+        13,
+    ],
+    "left_obs_inds": list(range(22, 30)) + list(range(36, 42)) + [43],
+    "right_obs_inds": list(range(14, 22)) + list(range(30, 36)) + [42],
+    "sideneg_obs_inds": list(range(30, 34)),
+    #### action:
+    "com_act_inds": [1],
+    "neg_act_inds": [0, 2],
+    "left_act_inds": [7, 8, 9, 10, 14, 15, 16],
+    "right_act_inds": [3, 4, 5, 6, 11, 12, 13],
+    "sideneg_act_inds": [11, 12],
+}
+
+### Phase envs #############################################################################
+# Phase_HumanoidBulletEnv-v0
+register_phase_env(
+    "pybullet_envs:HumanoidBulletEnv-v0", humanoid_mirror_inds, 1, 1 / 60
+)
+
+# Phase_WalkerBulletEnv-v0
+register_phase_env("pybullet_envs:WalkerBulletEnv-v0", walker_mirror_inds, 1, 1 / 60)
+############################################################################################
 
 # Symmetric_Walker2DBulletEnv-v0
-register_symmetric_env(
-    "pybullet_envs:Walker2DBulletEnv-v0",
-    {
-        #### observation:
-        "com_obs_inds": [0, 2, 3, 5, 7],
-        "neg_obs_inds": [1, 4, 6],
-        "left_obs_inds": list(range(8, 14)) + [20],
-        "right_obs_inds": list(range(14, 20)) + [21],
-        "sideneg_obs_inds": [],
-        #### action:
-        "com_act_inds": [],
-        "left_act_inds": list(range(0, 3)),
-        "right_act_inds": list(range(3, 6)),
-        "sideneg_act_inds": [],
-    },
-)
+register_symmetric_env("pybullet_envs:Walker2DBulletEnv-v0", walker_mirror_inds)
 
 # Symmetric_HumanoidBulletEnv-v0
-register_symmetric_env(
-    "pybullet_envs:HumanoidBulletEnv-v0",
-    {
-        #### observation:
-        "com_obs_inds": [
-            0,  # z
-            2,  # cos(yaw)
-            3,  # vx
-            5,  # vz
-            7,  # pitch
-            # common joints
-            10,
-            11,
-        ],
-        "neg_obs_inds": [
-            1,  # sin(yaw)
-            4,  # vy
-            6,  # roll
-            # neg joints
-            8,
-            9,
-            12,
-            13,
-        ],
-        "left_obs_inds": list(range(22, 30)) + list(range(36, 42)) + [43],
-        "right_obs_inds": list(range(14, 22)) + list(range(30, 36)) + [42],
-        "sideneg_obs_inds": list(range(30, 34)),
-        #### action:
-        "com_act_inds": [1],
-        "neg_act_inds": [0, 2],
-        "left_act_inds": [7, 8, 9, 10, 14, 15, 16],
-        "right_act_inds": [3, 4, 5, 6, 11, 12, 13],
-        "sideneg_act_inds": [11, 12],
-    },
-)
-
+register_symmetric_env("pybullet_envs:HumanoidBulletEnv-v0", humanoid_mirror_inds)
 
 # Symmetric_Walker3DCustomEnv-v0
 register_symmetric_env(
