@@ -19,6 +19,7 @@ from gym.core import Wrapper
 import numpy as np
 import torch
 
+import mocca_envs
 import symmetry.sym_envs
 
 
