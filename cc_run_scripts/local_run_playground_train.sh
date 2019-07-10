@@ -18,7 +18,7 @@ mkdir -p runs
 mkdir $log_path
 
 . ../venv/bin/activate
-nohup python playground/train.py with experiment_dir="$log_path/" $@ &> $log_path/slurm.out &
+nohup python -m playground.train with experiment_dir="$log_path/" $@ &> $log_path/slurm.out &
 
 PID=$!
 echo "Process spawned with ID: $PID"
