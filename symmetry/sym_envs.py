@@ -124,7 +124,7 @@ register_symmetric_env(
 )
 
 
-# Symmetry_CassiePhaseMocca2DEnv-v0
+# Symmetric_CassiePhaseMocca2DEnv-v0
 register_symmetric_env(
     "mocca_envs:CassiePhaseMocca2DEnv-v0",
     {
