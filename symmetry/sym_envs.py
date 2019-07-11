@@ -55,7 +55,9 @@ register_phase_env(
 )
 
 # Phase_WalkerBulletEnv-v0
-register_phase_env("pybullet_envs:Walker2DBulletEnv-v0", walker_mirror_inds, 1, 1 / 60)
+register_phase_env(
+    "pybullet_envs:Walker2DBulletEnv-v0", walker_mirror_inds, 0.8, 1 / 60
+)
 ############################################################################################
 
 # Symmetric_Walker2DBulletEnv-v0
