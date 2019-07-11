@@ -122,3 +122,44 @@ register_symmetric_env(
         "sideneg_act_inds": [],
     },
 )
+
+
+# Symmetry_CassiePhaseMocca2DEnv-v0
+register_symmetric_env(
+    "mocca_envs:CassiePhaseMocca2DEnv-v0",
+    {
+        "neg_obs_inds": [
+            # y
+            0,
+            # quat x
+            3,
+            # quat z
+            5,
+            # y velocity
+            21,
+            # x angular speed
+            23,
+            # z angular speed
+            25,
+        ],
+        "sideneg_obs_inds": [
+            # left abduction
+            6,
+            # left yaw
+            7,
+            # left abduction speed
+            26,
+            # left yaw speed
+            27,
+        ],
+        "com_obs_inds": [1, 2, 4, 20, 22, 24],
+        "left_obs_inds": list(range(6, 13)) + list(range(26, 33)) + [40],
+        "right_obs_inds": list(range(13, 20)) + list(range(33, 40)) + [41],
+        # action:
+        "com_act_inds": [],
+        "left_act_inds": list(range(0, 5)),
+        "right_act_inds": list(range(5, 10)),
+        "neg_act_inds": [],
+        "sideneg_act_inds": [0, 1],
+    },
+)
