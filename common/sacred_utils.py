@@ -60,7 +60,9 @@ def init(seed, config, _run, post_config=None):
         post_config(args)
 
     if not hasattr(args, "seed"):
-        args.seed = seed + args.replicate_num
+        args.seed = seed
+
+    args.seed += args.replicate_num - 1
 
     # Seed everything
     seed_all(args.seed)
