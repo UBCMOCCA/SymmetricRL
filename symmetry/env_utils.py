@@ -6,8 +6,10 @@ import gym
 import gym.spaces
 import gym.envs
 
+from .consts import MirrorMethods
 
-class SymmetricEnv(gym.Wrapper):
+
+class MirrorIndicesEnv(gym.Wrapper):
     """
         :params mirror_indices: indices used for mirroring the environment
             example:
@@ -34,25 +36,25 @@ class SymmetricEnv(gym.Wrapper):
           - both neg obs indices are treated the same here
     """
 
-    def __init__(self, env, minds=None):
+    def __init__(self, env, minds):
         super().__init__(env)
+        self.minds = minds
 
-        if isinstance(env, gym.Wrapper):
-            env = env.unwrapped
-
-        if minds is None:
-            minds = env.mirror_indices
+        env = self.unwrapped
 
         assert len(minds["left_obs_inds"]) == len(minds["right_obs_inds"])
         assert len(minds["left_act_inds"]) == len(minds["right_act_inds"])
         # *_in
-        ci = len(minds.get("com_obs_inds", []))
-        ni = len(minds.get("neg_obs_inds", []))
-        si = len(minds.get("left_obs_inds", []))
+        ci = len(minds["com_obs_inds"])
+        ni = len(minds["neg_obs_inds"])
+        si = len(minds["left_obs_inds"])
         # *_out
-        co = len(minds.get("com_act_inds", []))
-        no = len(minds.get("neg_act_inds", []))
-        so = len(minds.get("left_act_inds", []))
+        co = len(minds["com_act_inds"])
+        no = len(minds["neg_act_inds"])
+        so = len(minds["left_act_inds"])
+
+        self.in_sizes = ci, ni, si
+        self.out_sizes = co, no, so
 
         # print(ci, ni, si, co, no, so)
         # make sure the sizes match the observation space
@@ -60,36 +62,47 @@ class SymmetricEnv(gym.Wrapper):
         assert (ci + ni + 2 * si) == env.observation_space.shape[0]
         assert (co + no + 2 * so) == env.action_space.shape[0]
 
-        env.sym_act_inds = [co, no, so]
+        # for `common.envs_utils.get_mirror_function`
+        env.get_mirror_indices = lambda: [
+            minds["sideneg_obs_inds"] + minds["neg_obs_inds"],
+            minds["right_obs_inds"],
+            minds["left_obs_inds"],
+            minds["neg_act_inds"] + minds["sideneg_act_inds"],
+            minds["right_act_inds"],
+            minds["left_act_inds"],
+        ]
+
+    def render(self, *args, **kwargs):
+        self.env.render(*args, **kwargs)
+
+
+class SymmetricEnv(MirrorIndicesEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        env = self.unwrapped
+        minds = self.minds
+
+        env.sym_act_inds = self.out_sizes  # co, no, so
 
         high = np.ones(2 * env.observation_space.shape[0]) * np.inf
         self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
-        # high = np.ones(co + no + so) * np.inf
-        # self.action_space = gym.spaces.Box(-high, high, dtype=np.float32)
 
         # observation indices
-        self.neg_obs_inds = minds.get("sideneg_obs_inds", []) + minds.get(
-            "neg_obs_inds", []
-        )
+        self.neg_obs_inds = minds["sideneg_obs_inds"] + minds["neg_obs_inds"]
         self.lr_obs_inds = minds["left_obs_inds"] + minds["right_obs_inds"]
         self.rl_obs_inds = minds["right_obs_inds"] + minds["left_obs_inds"]
         # action indices
-        self.sideneg_act_inds = minds.get("sideneg_act_inds", [])
+        self.sideneg_act_inds = minds["sideneg_act_inds"]
         self.reverse_act_inds = (
-            minds.get("com_act_inds", [])
-            + minds.get("neg_act_inds", [])
-            + minds.get("left_act_inds", [])
-            + minds.get("right_act_inds", [])
+            minds["com_act_inds"]
+            + minds["neg_act_inds"]
+            + minds["left_act_inds"]
+            + minds["right_act_inds"]
         )
-        # for `common.envs_utils.get_mirror_function`
-        env.get_mirror_indices = lambda: [
-            self.neg_obs_inds,
-            minds["right_obs_inds"],
-            minds["left_obs_inds"],
-            minds.get("neg_act_inds", []) + minds.get("sideneg_act_inds", []),
-            minds.get("right_act_inds", []),
-            minds.get("left_act_inds", []),
-        ]
+        # should not use `common.envs_utils.get_mirror_function` on this environment
+        # TODO: we can allow this later
+        env.get_mirror_indices = None
 
     def reset(self, **kwargs):
         return self.fix_obs(self.env.reset(**kwargs))
@@ -107,40 +120,31 @@ class SymmetricEnv(gym.Wrapper):
         obs_m[self.lr_obs_inds] = obs_m[self.rl_obs_inds]
         return np.concatenate([obs, obs_m])
 
-    def render(self, *args, **kwargs):
-        # print(args, kwargs)
-        self.env.render(*args, **kwargs)
 
-
-class PhaseSymmetryEnv(gym.Wrapper):
-    def __init__(self, env, minds=None, gait_cycle_length=1.5, dt=1 / 60):
-        super().__init__(env)
+class PhaseSymmetryEnv(MirrorIndicesEnv):
+    def __init__(self, gait_cycle_length=1.5, dt=1 / 60, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.gait_cycle_length = gait_cycle_length
         self.ts_phase_increment = dt / gait_cycle_length
 
-        if isinstance(env, gym.Wrapper):
-            env = env.unwrapped
-
-        if minds is None:
-            minds = env.mirror_indices
+        env = self.unwrapped
+        minds = self.minds
 
         high = np.ones(1 + env.observation_space.shape[0]) * np.inf
         self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
-        # high = np.ones(co + no + so) * np.inf
-        # self.action_space = gym.spaces.Box(-high, high, dtype=np.float32)
 
         # observation indices
-        self.neg_obs_inds = minds.get("sideneg_obs_inds", []) + minds.get(
-            "neg_obs_inds", []
-        )
+        self.neg_obs_inds = minds["sideneg_obs_inds"] + minds["neg_obs_inds"]
         self.lr_obs_inds = minds["left_obs_inds"] + minds["right_obs_inds"]
         self.rl_obs_inds = minds["right_obs_inds"] + minds["left_obs_inds"]
         # action indices
-        self.neg_act_inds = minds.get("sideneg_act_inds", []) + minds.get(
-            "neg_act_inds", []
-        )
+        self.neg_act_inds = minds["sideneg_act_inds"] + minds["neg_act_inds"]
         self.lr_act_inds = minds["left_act_inds"] + minds["right_act_inds"]
         self.rl_act_inds = minds["right_act_inds"] + minds["left_act_inds"]
+
+        # should not use `common.envs_utils.get_mirror_function` on this environment
+        # TODO: we can allow this later
+        env.get_mirror_indices = None
 
     def reset(self, **kwargs):
         self.phase = 0 if self.np_random.uniform() < 0.5 else 0.5
@@ -160,10 +164,6 @@ class PhaseSymmetryEnv(gym.Wrapper):
             obs[self.lr_obs_inds] = obs[self.rl_obs_inds]
         return np.concatenate([[self.phase], obs])
 
-    def render(self, *args, **kwargs):
-        # print(args, kwargs)
-        self.env.render(*args, **kwargs)
-
 
 def register(id, **kvargs):
     if id in gym.envs.registration.registry.env_specs:
@@ -172,17 +172,18 @@ def register(id, **kvargs):
         return gym.envs.registration.register(id, **kvargs)
 
 
-def register_symmetric_env(env_id, mirror_inds):
+def register_symmetric_envs(env_id, mirror_inds, gait_cycle_length=None, dt=None):
+    env_name = env_id.split(":")[-1]
+
+    def make_mirror_env(*args, **kwargs):
+        return MirrorIndicesEnv(
+            env=gym.make(env_id, *args, **kwargs), minds=mirror_inds
+        )
+
     def make_sym_env(*args, **kwargs):
         return SymmetricEnv(env=gym.make(env_id, *args, **kwargs), minds=mirror_inds)
 
-    new_id = "Symmetric_%s" % env_id.split(":")[-1]
-    register(id=new_id, entry_point=make_sym_env)
-    return new_id
-
-
-def register_phase_env(env_id, mirror_inds, gait_cycle_length, dt):
-    def make_sym_env(*args, **kwargs):
+    def make_phase_env(*args, **kwargs):
         return PhaseSymmetryEnv(
             env=gym.make(env_id, *args, **kwargs),
             minds=mirror_inds,
@@ -190,6 +191,17 @@ def register_phase_env(env_id, mirror_inds, gait_cycle_length, dt):
             dt=dt,
         )
 
-    new_id = "Phase_%s" % env_id.split(":")[-1]
-    register(id=new_id, entry_point=make_sym_env)
-    return new_id
+    register(id="Mirror_%s" % env_name, entry_point=make_mirror_env)
+    register(id="Symmetric_%s" % env_name, entry_point=make_sym_env)
+    if gait_cycle_length is not None and dt is not None:
+        register(id="Phase_%s" % env_name, entry_point=make_phase_env)
+
+
+def get_env_name_for_method(env_name, mirror_method):
+    if mirror_method == MirrorMethods.net:
+        env_name = "Symmetric_" + env_name.split(":")[-1]
+    elif mirror_method == MirrorMethods.loss or mirror_method == MirrorMethods.traj:
+        env_name = "Mirror_" + env_name.split(":")[-1]
+    elif mirror_method == MirrorMethods.phase:
+        env_name = "Phase_" + env_name.split(":")[-1]
+    return env_name
