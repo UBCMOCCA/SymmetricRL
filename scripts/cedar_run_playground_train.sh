@@ -24,6 +24,7 @@ cat > $log_path/run_script.sh <<EOF
 #SBATCH --exclusive
 #SBATCH --cpus-per-task=24
 #SBATCH --mem=32000M
+#SBATCH --job-name=$name
 #SBATCH --array=1-$num_replicates
 . $project_path/../venv/bin/activate
 cd $project_path
