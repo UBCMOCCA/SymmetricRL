@@ -32,7 +32,7 @@ from symmetry.env_utils import get_env_name_for_method
 
 @ex.config
 def configs():
-    env_name = "Symmetric_Walker2DBulletEnv-v0"
+    env_name = "pybullet_envs:Walker2DBulletEnv-v0"
 
     # mirroring method
     mirror_method = "none"
