@@ -11,7 +11,6 @@ import torch
 from common.envs_utils import make_env
 from common.render_utils import StatsVisualizer
 from common.sacred_utils import load_configs
-from symmetry.env_utils import register_symmetric_env
 
 import symmetry.sym_envs
 

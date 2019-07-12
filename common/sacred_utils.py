@@ -47,7 +47,9 @@ def load_configs():
 
     with open(os.path.join(args.experiment_dir, "configs.json"), "r") as cfile:
         config = json.load(cfile)
-        return SimpleNamespace(net=args.net, plot=args.plot, dump=args.dump, **config)
+        data = SimpleNamespace(net=args.net, plot=args.plot, dump=args.dump, **config)
+        data.experiment_dir = args.experiment_dir
+        return data
 
 
 def init(seed, config, _run, post_config=None):
