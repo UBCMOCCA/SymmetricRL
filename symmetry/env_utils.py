@@ -72,6 +72,12 @@ class MirrorIndicesEnv(gym.Wrapper):
             minds["left_act_inds"],
         ]
 
+    def reset(self, **kwargs):
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        return self.env.step(action)
+
     def render(self, *args, **kwargs):
         self.env.render(*args, **kwargs)
 
