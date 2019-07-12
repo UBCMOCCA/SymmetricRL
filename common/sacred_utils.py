@@ -50,9 +50,12 @@ def load_configs():
         return SimpleNamespace(net=args.net, plot=args.plot, dump=args.dump, **config)
 
 
-def init(seed, config, _run):
+def init(seed, config, _run, post_config=None):
     # This gives dot access to all paths, hyperparameters, etc
     args = SimpleNamespace(**config)
+
+    if post_config is not None:
+        post_config(args)
 
     if not hasattr(args, "seed"):
         args.seed = seed + args.replicate_num

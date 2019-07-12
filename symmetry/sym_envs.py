@@ -1,73 +1,78 @@
-from .env_utils import register_symmetric_env, register_phase_env
+from .env_utils import register, register_symmetric_envs
 
 
-walker_mirror_inds = {
-    #### observation:
-    "com_obs_inds": [0, 2, 3, 5, 7],
-    "neg_obs_inds": [1, 4, 6],
-    "left_obs_inds": list(range(8, 14)) + [20],
-    "right_obs_inds": list(range(14, 20)) + [21],
-    "sideneg_obs_inds": [],
-    #### action:
-    "com_act_inds": [],
-    "left_act_inds": list(range(0, 3)),
-    "right_act_inds": list(range(3, 6)),
-    "sideneg_act_inds": [],
-}
-
-humanoid_mirror_inds = {
-    #### observation:
-    "com_obs_inds": [
-        0,  # z
-        2,  # cos(yaw)
-        3,  # vx
-        5,  # vz
-        7,  # pitch
-        # common joints
-        10,
-        11,
-    ],
-    "neg_obs_inds": [
-        1,  # sin(yaw)
-        4,  # vy
-        6,  # roll
-        # neg joints
-        8,
-        9,
-        12,
-        13,
-    ],
-    "left_obs_inds": list(range(22, 30)) + list(range(36, 42)) + [43],
-    "right_obs_inds": list(range(14, 22)) + list(range(30, 36)) + [42],
-    "sideneg_obs_inds": list(range(30, 34)),
-    #### action:
-    "com_act_inds": [1],
-    "neg_act_inds": [0, 2],
-    "left_act_inds": [7, 8, 9, 10, 14, 15, 16],
-    "right_act_inds": [3, 4, 5, 6, 11, 12, 13],
-    "sideneg_act_inds": [11, 12],
-}
-
-### Phase envs #############################################################################
-# Phase_HumanoidBulletEnv-v0
-register_phase_env(
-    "pybullet_envs:HumanoidBulletEnv-v0", humanoid_mirror_inds, 1, 1 / 60
+# Mirror_Walker2DBulletEnv-v0
+# Symmetric_Walker2DBulletEnv-v0 (only used for net)
+# Phase_Walker2DBulletEnv-v0 (only used for phase-based)
+register_symmetric_envs(
+    "pybullet_envs:Walker2DBulletEnv-v0",
+    gait_cycle_length=0.8,
+    dt=1 / 60,
+    mirror_inds={
+        #### observation:
+        "com_obs_inds": [0, 2, 3, 5, 7],
+        "neg_obs_inds": [1, 4, 6],
+        "left_obs_inds": list(range(8, 14)) + [20],
+        "right_obs_inds": list(range(14, 20)) + [21],
+        "sideneg_obs_inds": [],
+        #### action:
+        "com_act_inds": [],
+        "neg_act_inds": [],
+        "sideneg_act_inds": [],
+        "left_act_inds": list(range(0, 3)),
+        "right_act_inds": list(range(3, 6)),
+    },
 )
 
-# Phase_WalkerBulletEnv-v0
-register_phase_env("pybullet_envs:Walker2DBulletEnv-v0", walker_mirror_inds, 1, 1 / 60)
-############################################################################################
+# Mirror_HumanoidBulletEnv-v0
+# Symmetric_HumanoidBulletEnv-v0 (only used for net)
+# Phase_HumanoidBulletEnv-v0 (only used for phase-based)
+register_symmetric_envs(
+    "pybullet_envs:HumanoidBulletEnv-v0",
+    gait_cycle_length=1,
+    dt=1 / 60,
+    mirror_inds={
+        #### observation:
+        "com_obs_inds": [
+            0,  # z
+            2,  # cos(yaw)
+            3,  # vx
+            5,  # vz
+            7,  # pitch
+            # common joints
+            10,
+            11,
+        ],
+        "neg_obs_inds": [
+            1,  # sin(yaw)
+            4,  # vy
+            6,  # roll
+            # neg joints
+            8,
+            9,
+            12,
+            13,
+        ],
+        "left_obs_inds": list(range(22, 30)) + list(range(36, 42)) + [43],
+        "right_obs_inds": list(range(14, 22)) + list(range(30, 36)) + [42],
+        "sideneg_obs_inds": list(range(30, 34)),
+        #### action:
+        "com_act_inds": [1],
+        "neg_act_inds": [0, 2],
+        "left_act_inds": [7, 8, 9, 10, 14, 15, 16],
+        "right_act_inds": [3, 4, 5, 6, 11, 12, 13],
+        "sideneg_act_inds": [11, 12],
+    },
+)
 
-# Symmetric_Walker2DBulletEnv-v0
-register_symmetric_env("pybullet_envs:Walker2DBulletEnv-v0", walker_mirror_inds)
-
-# Symmetric_HumanoidBulletEnv-v0
-register_symmetric_env("pybullet_envs:HumanoidBulletEnv-v0", humanoid_mirror_inds)
-
-# Symmetric_Walker3DCustomEnv-v0
-register_symmetric_env(
+# Mirror_Walker3DCustomEnv-v0
+# Symmetric_Walker3DCustomEnv-v0 (only used for net)
+# Phase_Walker3DCustomEnv-v0 (only used for phase-based)
+register_symmetric_envs(
     "mocca_envs:Walker3DCustomEnv-v0",
-    {
+    gait_cycle_length=1,
+    dt=1 / 60,
+    mirror_inds={
         #### observation:
         "com_obs_inds": [0, 1, 3, 5, 7, 51, 28],
         "left_obs_inds": [
@@ -124,10 +129,11 @@ register_symmetric_env(
 )
 
 
-# Symmetric_CassiePhaseMocca2DEnv-v0
-register_symmetric_env(
+# Mirror_CassiePhaseMocca2DEnv-v0
+# Symmetric_CassiePhaseMocca2DEnv-v0 (only used for net)
+register_symmetric_envs(
     "mocca_envs:CassiePhaseMocca2DEnv-v0",
-    {
+    mirror_inds={
         "neg_obs_inds": [
             # y
             0,
@@ -162,4 +168,12 @@ register_symmetric_env(
         "neg_act_inds": [],
         "sideneg_act_inds": [0, 1],
     },
+)
+
+# Phase_CassiePhaseMocca2DEnv-v0 (only used for phase-based)
+register(
+    id="Phase_CassiePhaseMocca2DEnv-v0",
+    entry_point="mocca_envs.cassie_envs:CassiePhaseMirrorEnv",
+    max_episode_steps=1000,
+    kwargs={"planar": True},
 )
