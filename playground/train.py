@@ -21,23 +21,18 @@ from common.envs_utils import (
     cleanup_log_dir,
     get_mirror_function,
 )
-from common.misc_utils import (
-    linear_decay,
-    exponential_decay,
-    set_optimizer_lr,
-    StringEnum,
-)
+from common.misc_utils import linear_decay, exponential_decay, set_optimizer_lr
 from common.csv_utils import ConsoleCSVLogger
 from common.sacred_utils import ex, init, seed_all
 
+from symmetry.consts import MirrorMethods
 from symmetry.net import SymmetricNet, SymmetricVNet
-
-MirrorMethods = StringEnum(["none", "net", "traj", "loss"])
+from symmetry.env_utils import get_env_name_for_method
 
 
 @ex.config
 def configs():
-    env_name = "Symmetric_Walker2DBulletEnv-v0"
+    env_name = "pybullet_envs:Walker2DBulletEnv-v0"
 
     # mirroring method
     mirror_method = "none"
@@ -82,9 +77,13 @@ def configs():
     }
 
 
+def post_config(args):
+    args.env_name = get_env_name_for_method(args.env_name, args.mirror_method)
+
+
 @ex.automain
 def main(_seed, _config, _run):
-    args = init(_seed, _config, _run)
+    args = init(_seed, _config, _run, post_config=post_config)
 
     env_name = args.env_name
 
