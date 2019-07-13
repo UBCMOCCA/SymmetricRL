@@ -7,6 +7,7 @@ source venv/bin/activate
 # installing dependencies
 pip install gym
 pip install sacred pymongo GitPython
+pip install pandas matplotlib
 
 # module avail cuda
 module load cuda/10.0.130

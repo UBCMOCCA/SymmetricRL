@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+git pull --recurse-submodules
+
 num_replicates=1
 experiment_path="$HOME/projects/def-vandepan/symmetric"
 project_path="$HOME/projects/def-vandepan/$USER/SymmetricRL"
