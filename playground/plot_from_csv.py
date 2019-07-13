@@ -117,6 +117,13 @@ def compute_group_data(data, group_names, row, columns):
             groups[gname] = []
         groups[gname].append(df)
 
+    for key, dfs in groups.items():
+        # Find shortest dataframe in each group
+        # and truncate to that dataframe
+        min_ = np.min([len(df[columns[0]]) for df in dfs])
+        for i, _ in enumerate(dfs):
+            dfs[i] = dfs[i].truncate(after=min_ - 1)
+
     stat_funcs = {"": np.mean, "_min": np.min, "_max": np.max}
 
     for key, dfs in groups.items():
