@@ -38,6 +38,8 @@ def configs():
     mirror_method = "none"
     assert mirror_method in MirrorMethods
 
+    sym_value_net = mirror_method == MirrorMethods.net
+
     # Auxiliary configurations
     num_frames = 6e7
     seed = 16
@@ -113,7 +115,7 @@ def main(_seed, _config, _run):
         if args.mirror_method == MirrorMethods.net:
             controller = SymmetricNet(controller, *dummy_env.unwrapped.sym_act_inds)
         actor_critic = Policy(controller)
-        if args.mirror_method == MirrorMethods.net:
+        if args.sym_value_net:
             actor_critic.critic = SymmetricVNet(
                 actor_critic.critic, controller.state_dim
             )
