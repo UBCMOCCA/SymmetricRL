@@ -13,11 +13,13 @@ from common.render_utils import StatsVisualizer
 from common.sacred_utils import load_configs
 
 import symmetry.sym_envs
+from symmetry.env_utils import get_env_name_for_method
 
 
 def main():
     args = load_configs()
     env_name = args.env_name
+    env_name = get_env_name_for_method(args.env_name, args.mirror_method)
 
     env = make_env(env_name, render=True)
     env.seed(1093)
