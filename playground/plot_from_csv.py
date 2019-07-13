@@ -71,7 +71,7 @@ def main():
 
     # getting rid of
     legends = [l for (l, d) in zip(legends, data) if d is not None]
-    data = [d for d in data if data is not None]
+    data = [d for d in data if d is not None]
 
     if args.group:
         data, legends = compute_group_data(data, legends, args.row, args.columns)
@@ -106,7 +106,7 @@ def load_path(path, args):
     try:
         return pd.read_csv(filename)
     except:
-        warnings.warn("Could not load %d" % filename)
+        warnings.warn("Could not load %s" % filename)
         return None
 
 
