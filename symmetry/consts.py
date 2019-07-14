@@ -5,4 +5,4 @@ from common.misc_utils import (
     StringEnum,
 )
 
-MirrorMethods = StringEnum(["none", "net", "traj", "loss", "phase"])
+MirrorMethods = StringEnum(["none", "net", "traj", "loss", "phase", "net2"])

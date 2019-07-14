@@ -3,6 +3,7 @@ from .env_utils import register, register_symmetric_envs
 
 # Mirror_Walker2DBulletEnv-v0
 # Symmetric_Walker2DBulletEnv-v0 (only used for net)
+# SymmetricV2_Walker2DBulletEnv-v0 (only used for net2)
 # Phase_Walker2DBulletEnv-v0 (only used for phase-based)
 register_symmetric_envs(
     "pybullet_envs:Walker2DBulletEnv-v0",
@@ -26,6 +27,7 @@ register_symmetric_envs(
 
 # Mirror_HumanoidBulletEnv-v0
 # Symmetric_HumanoidBulletEnv-v0 (only used for net)
+# SymmetricV2_HumanoidBulletEnv-v0 (only used for net2)
 # Phase_HumanoidBulletEnv-v0 (only used for phase-based)
 register_symmetric_envs(
     "pybullet_envs:HumanoidBulletEnv-v0",
@@ -67,6 +69,7 @@ register_symmetric_envs(
 
 # Mirror_Walker3DCustomEnv-v0
 # Symmetric_Walker3DCustomEnv-v0 (only used for net)
+# SymmetricV2_Walker3DCustomEnv-v0 (only used for net2)
 # Phase_Walker3DCustomEnv-v0 (only used for phase-based)
 register_symmetric_envs(
     "mocca_envs:Walker3DCustomEnv-v0",
@@ -131,6 +134,7 @@ register_symmetric_envs(
 
 # Mirror_Walker3DStepperEnv-v0
 # Symmetric_Walker3DStepperEnv-v0 (only used for net)
+# SymmetricV2_Walker3DStepperEnv-v0 (only used for net2)
 # Phase_Walker3DStepperEnv-v0 (only used for phase-based)
 register_symmetric_envs(
     "mocca_envs:Walker3DStepperEnv-v0",
@@ -194,6 +198,7 @@ register_symmetric_envs(
 
 # Mirror_CassiePhaseMocca2DEnv-v0
 # Symmetric_CassiePhaseMocca2DEnv-v0 (only used for net)
+# SymmetricV2_CassiePhaseMocca2DEnv-v0 (only used for net2)
 register_symmetric_envs(
     "mocca_envs:CassiePhaseMocca2DEnv-v0",
     mirror_inds={

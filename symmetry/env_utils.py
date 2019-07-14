@@ -127,6 +127,60 @@ class SymmetricEnv(MirrorIndicesEnv):
         return np.concatenate([obs, obs_m])
 
 
+class SymmetricEnvV2(MirrorIndicesEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        env = self.unwrapped
+        minds = self.minds
+
+        ci, ni, si = self.in_sizes
+        co, no, so = self.out_sizes
+
+        env.mirror_sizes = [
+            # obs (in)
+            ci,  # c_in
+            ni,  # n_in
+            si,  # s_in
+            # act (out)
+            co,  # c_out
+            no,  # n_out
+            so,  # s_out
+        ]
+        self.reverse_act_inds = (
+            minds["com_act_inds"]
+            + minds["neg_act_inds"]
+            + minds["left_act_inds"]
+            + minds["right_act_inds"]
+        )
+
+        # should not use `common.envs_utils.get_mirror_function` on this environment
+        # TODO: we can allow this later
+        env.get_mirror_indices = None
+
+    def reset(self, **kwargs):
+        return self.fix_obs(self.env.reset(**kwargs))
+
+    def step(self, act_):
+        # the same as `SymmetricEnv.step`
+        action = 0 * act_
+        action[self.reverse_act_inds] = act_
+        action[self.minds["sideneg_act_inds"]] *= -1
+        obs, reward, done, info = self.env.step(action)
+        return self.fix_obs(obs), reward, done, info
+
+    def fix_obs(self, obs):
+        obs[self.minds["sideneg_obs_inds"]] *= -1
+        return np.concatenate(
+            [
+                obs[self.minds["com_obs_inds"]],
+                obs[self.minds["neg_obs_inds"]],
+                obs[self.minds["left_obs_inds"]],
+                obs[self.minds["right_obs_inds"]],
+            ]
+        )
+
+
 class PhaseSymmetryEnv(MirrorIndicesEnv):
     def __init__(self, gait_cycle_length=1.5, dt=1 / 60, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -189,6 +243,9 @@ def register_symmetric_envs(env_id, mirror_inds, gait_cycle_length=None, dt=None
     def make_sym_env(*args, **kwargs):
         return SymmetricEnv(env=gym.make(env_id, *args, **kwargs), minds=mirror_inds)
 
+    def make_symv2_env(*args, **kwargs):
+        return SymmetricEnvV2(env=gym.make(env_id, *args, **kwargs), minds=mirror_inds)
+
     def make_phase_env(*args, **kwargs):
         return PhaseSymmetryEnv(
             env=gym.make(env_id, *args, **kwargs),
@@ -199,6 +256,7 @@ def register_symmetric_envs(env_id, mirror_inds, gait_cycle_length=None, dt=None
 
     register(id="Mirror_%s" % env_name, entry_point=make_mirror_env)
     register(id="Symmetric_%s" % env_name, entry_point=make_sym_env)
+    register(id="SymmetricV2_%s" % env_name, entry_point=make_symv2_env)
     if gait_cycle_length is not None and dt is not None:
         register(id="Phase_%s" % env_name, entry_point=make_phase_env)
 
@@ -206,6 +264,8 @@ def register_symmetric_envs(env_id, mirror_inds, gait_cycle_length=None, dt=None
 def get_env_name_for_method(env_name, mirror_method):
     if mirror_method == MirrorMethods.net:
         env_name = "Symmetric_" + env_name.split(":")[-1]
+    if mirror_method == MirrorMethods.net2:
+        env_name = "SymmetricV2_" + env_name.split(":")[-1]
     elif mirror_method == MirrorMethods.loss or mirror_method == MirrorMethods.traj:
         env_name = "Mirror_" + env_name.split(":")[-1]
     elif mirror_method == MirrorMethods.phase:

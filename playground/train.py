@@ -27,6 +27,7 @@ from common.sacred_utils import ex, init, seed_all
 
 from symmetry.consts import MirrorMethods
 from symmetry.net import SymmetricNet, SymmetricVNet
+from symmetry.net2 import SymmetricNetV2
 from symmetry.env_utils import get_env_name_for_method
 
 
@@ -38,7 +39,9 @@ def configs():
     mirror_method = "none"
     assert mirror_method in MirrorMethods
 
-    sym_value_net = mirror_method == MirrorMethods.net
+    sym_value_net = (
+        mirror_method == MirrorMethods.net or mirror_method == MirrorMethods.net2
+    )
 
     # Auxiliary configurations
     num_frames = 6e7
@@ -111,9 +114,17 @@ def main(_seed, _config, _run):
         print("Loading model {}".format(best_model))
         actor_critic = torch.load(model_path)
     else:
-        controller = SoftsignActor(dummy_env)
-        if args.mirror_method == MirrorMethods.net:
-            controller = SymmetricNet(controller, *dummy_env.unwrapped.sym_act_inds)
+        if args.mirror_method == MirrorMethods.net2:
+            controller = SymmetricNetV2(
+                *dummy_env.unwrapped.mirror_sizes,
+                num_layers=6,
+                hidden_size=256,
+                tanh_finish=True
+            )
+        else:
+            controller = SoftsignActor(dummy_env)
+            if args.mirror_method == MirrorMethods.net:
+                controller = SymmetricNet(controller, *dummy_env.unwrapped.sym_act_inds)
         actor_critic = Policy(controller)
         if args.sym_value_net:
             actor_critic.critic = SymmetricVNet(
