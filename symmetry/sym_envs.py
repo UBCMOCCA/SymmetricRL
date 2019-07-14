@@ -129,6 +129,69 @@ register_symmetric_envs(
 )
 
 
+# Mirror_Walker3DStepperEnv-v0
+# Symmetric_Walker3DStepperEnv-v0 (only used for net)
+# Phase_Walker3DStepperEnv-v0 (only used for phase-based)
+register_symmetric_envs(
+    "mocca_envs:Walker3DStepperEnv-v0",
+    gait_cycle_length=1,
+    dt=1 / 60,
+    mirror_inds={
+        #### observation:
+        "com_obs_inds": [0, 1, 3, 5, 7, 28, 51, 52, 54, 56, 57, 59],
+        "left_obs_inds": [
+            14,
+            15,
+            16,
+            17,
+            18,
+            23,
+            24,
+            25,
+            26,
+            35,
+            36,
+            37,
+            38,
+            39,
+            44,
+            45,
+            46,
+            47,
+            49,
+        ],
+        "right_obs_inds": [
+            9,
+            10,
+            11,
+            12,
+            13,
+            19,
+            20,
+            21,
+            22,
+            30,
+            31,
+            32,
+            33,
+            34,
+            40,
+            41,
+            42,
+            43,
+            48,
+        ],
+        "neg_obs_inds": [2, 4, 6, 8, 27, 29, 50, 53, 55, 58],
+        "sideneg_obs_inds": [],
+        #### action:
+        "com_act_inds": [1],
+        "neg_act_inds": [0, 2],
+        "left_act_inds": [8, 9, 10, 11, 12, 17, 18, 19, 20],
+        "right_act_inds": [3, 4, 5, 6, 7, 13, 14, 15, 16],
+        "sideneg_act_inds": [],
+    },
+)
+
 # Mirror_CassiePhaseMocca2DEnv-v0
 # Symmetric_CassiePhaseMocca2DEnv-v0 (only used for net)
 register_symmetric_envs(
