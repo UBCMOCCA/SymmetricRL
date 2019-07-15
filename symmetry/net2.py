@@ -107,6 +107,12 @@ class SymmetricNetV2(nn.Module):
             SymmetricLayer(last_cin, last_nin, last_sin, c_out, n_out, s_out, wmag=0.01)
         )
         self.add_module("final", self.layers[-1])
+        self.register_buffer("c_range", th.arange(0, c_in))
+        self.register_buffer("n_range", th.arange(c_in, c_in + n_in))
+        self.register_buffer("l_range", th.arange(c_in + n_in, c_in + n_in + s_in))
+        self.register_buffer(
+            "r_range", th.arange(c_in + n_in + s_in, c_in + n_in + 2 * s_in)
+        )
 
     @property
     def state_dim(self):
@@ -118,10 +124,10 @@ class SymmetricNetV2(nn.Module):
 
     def forward(self, obs):
         cs, ns, ss = self.c_in, self.n_in, self.s_in
-        c = obs.index_select(-1, th.arange(0, cs))
-        n = obs.index_select(-1, th.arange(cs, cs + ns))
-        l = obs.index_select(-1, th.arange(cs + ns, cs + ns + ss))
-        r = obs.index_select(-1, th.arange(cs + ns + ss, cs + ns + 2 * ss))
+        c = obs.index_select(-1, self._buffers["c_range"])
+        n = obs.index_select(-1, self._buffers["n_range"])
+        l = obs.index_select(-1, self._buffers["l_range"])
+        r = obs.index_select(-1, self._buffers["r_range"])
 
         for i, layer in enumerate(self.layers):
             if i != 0:
@@ -132,7 +138,7 @@ class SymmetricNetV2(nn.Module):
 
             c, n, l, r = layer(c, n, l, r)
 
-        empty = th.FloatTensor(obs.shape[:-1] + (0,))
+        empty = th.FloatTensor(obs.shape[:-1] + (0,)).to(obs.device)
         mean = th.cat(
             [
                 c if c.shape[-1] > 0 else empty,
