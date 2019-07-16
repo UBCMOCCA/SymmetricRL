@@ -14,7 +14,7 @@ import torch
 
 from algorithms.ppo import PPO
 from algorithms.storage import RolloutStorage
-from common.controller import SoftsignActor, Policy
+from common.controller import ReluActor, Policy
 from common.envs_utils import (
     make_env,
     make_vec_envs,
@@ -122,7 +122,7 @@ def main(_seed, _config, _run):
                 tanh_finish=True
             )
         else:
-            controller = SoftsignActor(dummy_env)
+            controller = ReluActor(dummy_env)
             if args.mirror_method == MirrorMethods.net:
                 controller = SymmetricNet(controller, *dummy_env.unwrapped.sym_act_inds)
         actor_critic = Policy(controller)

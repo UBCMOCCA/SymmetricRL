@@ -73,10 +73,6 @@ class Policy(nn.Module):
             nn.ReLU(),
             init_(nn.Linear(h_size, h_size)),
             nn.ReLU(),
-            init_(nn.Linear(h_size, h_size)),
-            nn.ReLU(),
-            init_(nn.Linear(h_size, h_size)),
-            nn.ReLU(),
             init_(nn.Linear(h_size, 1)),
         )
         self.state_size = 1
@@ -172,9 +168,6 @@ class ReluActor(nn.Module):
         h_size = 256
         self.fc1 = init_(nn.Linear(self.state_dim, h_size))
         self.fc2 = init_(nn.Linear(h_size, h_size))
-        self.fc3 = init_(nn.Linear(h_size, h_size))
-        self.fc4 = init_(nn.Linear(h_size, h_size))
-        self.fc5 = init_(nn.Linear(h_size, h_size))
         self.out = init_(nn.Linear(h_size, self.action_dim))
 
         self.train()
@@ -182,9 +175,6 @@ class ReluActor(nn.Module):
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = F.relu(self.fc5(x))
         x = torch.tanh(self.out(x))
         return x
 
