@@ -28,6 +28,7 @@ def main():
     parser.add_argument("--legend", type=str2bool, default=True)
     parser.add_argument("--name_regex", type=str, default="")
     parser.add_argument("--final", type=str2bool, default=False)
+    parser.add_argument("--save", type=str, default="figure.png")
     args = parser.parse_args()
 
     N = len(args.columns)
@@ -96,6 +97,7 @@ def main():
                         line_num=i,
                     )
 
+    plt.savefig(args.save)
     plt.ioff()
     plt.show()
 
