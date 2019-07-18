@@ -25,33 +25,6 @@ def experiment_config():
     replicate_num = 1
 
 
-def load_configs():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment_dir", type=str)
-    parser.add_argument(
-        "--net", type=str, default=None, help="Path to trained network file"
-    )
-    parser.add_argument(
-        "--plot",
-        action="store_true",
-        default=False,
-        help="If true, plot stats in real-time",
-    )
-    parser.add_argument(
-        "--dump",
-        action="store_true",
-        default=False,
-        help="If true, dump camera rgb array",
-    )
-    args = parser.parse_args()
-
-    with open(os.path.join(args.experiment_dir, "configs.json"), "r") as cfile:
-        config = json.load(cfile)
-        data = SimpleNamespace(net=args.net, plot=args.plot, dump=args.dump, **config)
-        data.experiment_dir = args.experiment_dir
-        return data
-
-
 def init(seed, config, _run, post_config=None):
     # This gives dot access to all paths, hyperparameters, etc
     args = SimpleNamespace(**config)

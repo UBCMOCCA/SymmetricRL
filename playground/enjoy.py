@@ -1,6 +1,7 @@
 import os
 import time
 from glob import glob
+from types import SimpleNamespace
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -10,25 +11,37 @@ import torch
 
 from common.envs_utils import make_env
 from common.render_utils import StatsVisualizer
-from common.sacred_utils import load_configs
+from common.sacred_utils import ex
 
 import symmetry.sym_envs
 from symmetry.env_utils import get_env_name_for_method
 
 
-def main():
-    args = load_configs()
+@ex.config
+def config():
+    net = None
+    plot = False
+    dump = False
+    env_name = ""
+    experiment_dir = "."
+    assert experiment_dir != "."
+    ex.add_config(os.path.join(experiment_dir, "configs.json"))  # loads saved configs
+
+
+@ex.automain
+def main(_config):
+    args = SimpleNamespace(**_config)
+    assert args.env_name != ""
+
     env_name = args.env_name
     env_name = get_env_name_for_method(args.env_name, args.mirror_method)
 
+    model_path = args.net or os.path.join(
+        args.experiment_dir, "models", "{}_best.pt".format(env_name)
+    )
+
     env = make_env(env_name, render=True)
     env.seed(1093)
-
-    if args.net is None:
-        best_model = "{}_best.pt".format(env_name)
-        model_path = os.path.join(args.experiment_dir, "models", best_model)
-    else:
-        model_path = args.net
 
     print("Env: {}".format(env_name))
     print("Model: {}".format(os.path.basename(model_path)))
@@ -107,7 +120,3 @@ def main():
         now_string = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         filename = os.path.join(dump_dir, "{}.mp4".format(now_string))
         clip.write_videofile(filename)
-
-
-if __name__ == "__main__":
-    main()
