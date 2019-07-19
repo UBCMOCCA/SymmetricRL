@@ -245,3 +245,72 @@ register(
     max_episode_steps=1000,
     kwargs={"planar": True},
 )
+
+
+
+# Mirror_CassieMJCEnv-v0
+# Symmetric_CassieMJCEnv-v0 (only used for net)
+# SymmetricV2_CassieMJCEnv-v0 (only used for net2)
+register_symmetric_envs(
+    "cassie_sim_to_real:CassieMJCEnv-v0",
+    mirror_inds={
+        "neg_obs_inds": [
+            # quat x
+            2,
+            # quat z
+            4,
+            # y velocity
+            16,
+            # x angular speed
+            18,
+            # z angular speed
+            20,
+            # ay
+            32
+        ],
+        "sideneg_obs_inds": [
+            # left abduction
+            5,
+            # left yaw
+            6,
+            # left abduction speed
+            21,
+            # left yaw speed
+            22,
+        ],
+        "com_obs_inds": [
+            # z
+            0,
+            # w, y
+            1, 3,
+            # vx
+            15,
+            # vz
+            17,
+            # wy
+            19,
+            # ax
+            31,
+            # az
+            33,
+        
+        ],
+        "left_obs_inds": list(range(5, 10)) + list(range(21, 26)) + list(range(34,37))  + [40, 41, 42, 46],
+        "right_obs_inds": list(range(10, 15)) + list(range(26, 31)) + list(range(37,40)) + [43, 44, 45, 47],
+        # action:
+        "com_act_inds": [],
+        "left_act_inds": list(range(0, 5)),
+        "right_act_inds": list(range(5, 10)),
+        "neg_act_inds": [],
+        "sideneg_act_inds": [0, 1],
+    },
+)
+
+
+# Phase_CassieMJCEnv-v0 (only used for phase-based)
+register(
+    id="Phase_CassieMJCEnv-v0",
+    entry_point="cassie_sim_to_real.cassieRLEnvMirrorPhase:cassieRLEnvMirrorPhaseGym",
+    max_episode_steps=300,
+)
+

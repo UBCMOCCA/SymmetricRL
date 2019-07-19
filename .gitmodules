@@ -1,3 +1,6 @@
 [submodule ".environments"]
 	path = .environments
 	url = git@github.com:UBCMOCCA/mocca_envs.git
+[submodule "cassie_sim_to_real"]
+	path = cassie_sim_to_real
+	url = git@gitlab.com:zxieaa/cassie_sim_to_real.git
