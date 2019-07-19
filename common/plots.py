@@ -164,9 +164,12 @@ class LinePlot(Plot):
         self._redraw()
 
     def fill_between(self, x, ymin, ymax, alpha=0.1, line_num=0):
-        self.subplot.fill_between(
-            x, ymin, ymax, alpha=alpha, color=self.COLORS[line_num % len(self.COLORS)]
-        )
+        color = self.COLORS[line_num % len(self.COLORS)]
+        self.subplot.fill_between(x, ymin, ymax, alpha=alpha, color=color)
+        self.xlim = [min(self.xlim[0], x.min()), max(self.xlim[1], x.max())]
+        self.ylim = [min(self.ylim[0], ymin.min()), max(self.ylim[1], ymax.max())]
+        self.subplot.set_xlim(*self.xlim)
+        self.subplot.set_ylim(*self.ylim)
 
 
 class ScatterPlot(Plot):
