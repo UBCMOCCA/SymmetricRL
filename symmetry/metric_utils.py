@@ -153,8 +153,11 @@ def phase_plot(ql, qdotl, qr, qdotr, skip_strides=0, render=True, save_path=None
 
     if render or save_path:
         plt.ioff()
-        plt.plot(ql, qdotl, "ro", markersize=1)
-        plt.plot(qr, qdotr, "go", markersize=1)
+        plt.plot(ql, qdotl, "ro", markersize=1, label="left")
+        plt.plot(qr, qdotr, "go", markersize=1, label="right")
+        plt.xlabel("Hip Flexion Angle")
+        plt.ylabel("Hip Flexion Velocity")
+
         if render:
             plt.show()
         if save_path:
