@@ -228,7 +228,7 @@ class PhasePlotEnv(gym.Wrapper):
                     self.qdotr,
                     skip_strides=self.skip_strides,
                     render=False,
-                    save_path=os.path.join(self.save_path, "phase_plot.png"),
+                    save_path=os.path.join(self.save_path, "phase_plot.svg"),
                 )
                 info["metrics"] = {"phase_plot_index": distance}
 
@@ -272,13 +272,14 @@ if __name__ == "__main__":
                 motor_pos[i][j][k] = state[i * clen + j][0][k]
                 motor_vel[i][j][k] = state[i * clen + j][1][k]
 
+    save_dir = os.path.dirname(sys.argv[1])
     distance = phase_plot(
         motor_pos[:, :, 3],
         motor_vel[:, :, 3],
         motor_pos[:, :, 8],
         motor_vel[:, :, 8],
         render=False,
-        save_path=sys.argv[1] + "_phase_plot.png",
+        save_path=os.path.join(save_dir, "phase_plot.svg"),
     )
 
     print("Distance %6.3f" % distance)
