@@ -17,12 +17,45 @@ def compute_si(values):
     Computes the symmetric index for the input array
 
     Arguments:
-        values: A Nx2xd array where the middle index is for left/right and the last index is for different joints/objects
+        values: A Nx2xd array where d is num joints/objects and 2 is for left/right
     """
     l, r = np.array(values).transpose([1, 0, 2])
-    l = np.sort(l, axis=0)
-    r = np.sort(r, axis=0)
-    return 200 * np.abs(np.subtract(l, r)).mean() / (np.abs(l) + np.abs(r)).mean()
+    xl = np.linalg.norm(l, axis=1).sum()
+    xr = np.linalg.norm(r, axis=1).sum()
+    return 200 * abs(xl - xr) / (xl + xr)
+
+
+def calc_best_distance(l, r):
+    """
+    Calculates best distance with optimal shift (to get rid of phase difference)
+
+    Arguments:
+        l: A Nxd matrix
+        r: A Nxd matrix
+    """
+    best_dist, best_shift = float("inf"), 0
+    for shift in range(l.shape[0]):
+        dist = np.linalg.norm(l - np.roll(r, shift), ord=1, axis=1).sum()
+        if dist < best_dist:
+            best_dist, best_shift = dist, shift
+
+    return best_dist, best_shift
+
+
+def compute_msi(values):
+    """
+    Computes the modified symmetric index for the input array
+
+    Arguments:
+        values: A Nx2xd array where d is num joints/objects and 2 is for left/right
+    """
+    l, r = np.array(values).transpose([1, 0, 2])
+
+    w = 50 / (np.linalg.norm(l, ord=1, axis=1) + np.linalg.norm(r, ord=1, axis=1)).sum()
+
+    distance, shift = calc_best_distance(l, r)
+
+    return w * distance
 
 
 class MetricsEnv(gym.Wrapper):
@@ -63,7 +96,10 @@ class MetricsEnv(gym.Wrapper):
 
         if strike and len(self.metrics["torque"]) * self.dt > 0.5:
             if not self.first_strike:
-                info["metrics"] = {k: compute_si(v) for k, v in self.metrics.items()}
+                info["metrics"] = {
+                    "torque": compute_si(self.metrics["torque"]),
+                    "joint_angle": compute_msi(self.metrics["joint_angle"]),
+                }
                 # print(len(self.metrics["torque"]) * self.dt)
             self.first_strike = False
             self.reset_metrics()
@@ -105,42 +141,26 @@ def average_values(array):
     )
 
 
-def calc_best_distance(ql, qdotl, qr, qdotr):
-    """
-    Calculates best distance with optimal shift (to get rid of phase difference)
-    """
-    # use max to make the metric scale invariant
-    max_qdot = np.max(np.abs(np.concatenate([qdotl, qdotr])))
-    max_q = np.max(np.abs(np.concatenate([ql, qr])))
-
-    vl = np.stack([ql / max_q, qdotl / max_qdot]).transpose()
-    vr = np.stack([qr / max_q, qdotr / max_qdot]).transpose()
-
-    best_dist, best_shift = float("inf"), 0
-    for shift in range(vl.shape[0]):
-        dist = np.linalg.norm(vl - np.roll(vr, shift), ord=2, axis=-1).mean()
-        if dist < best_dist:
-            best_dist, best_shift = dist, shift
-
-    return best_dist, best_shift
-
-
-def compute_phase_plot_si(ql, qdotl, qr, qdotr, skip_strides=0):
-    """
-    Computes a symmetric index based on the phase plot (q/qdot) of left and right
-
-    Arguments:
-        ql, qdotl, qr, qdotr: array of length `num_strides` each containing another array (sizes of the inner arrays may differ)
-        skip_strides: number of initial strides to ignore
-    """
+def phase_plot(ql, qdotl, qr, qdotr, skip_strides=0, render=True, save_path=None):
     ql = average_values(ql[skip_strides:])
     qdotl = average_values(qdotl[skip_strides:])
     qr = average_values(qr[skip_strides:])
     qdotr = average_values(qdotr[skip_strides:])
 
-    distance, shift = calc_best_distance(ql, qdotl, qr, qdotr)
+    distance = compute_msi(
+        np.stack([np.stack([ql, qdotl]), np.stack([qr, qdotr])]).transpose((2, 0, 1))
+    )
 
-    return distance, ql, qdotl, qr, qdotr
+    if render or save_path:
+        plt.ioff()
+        plt.plot(ql, qdotl, "ro", markersize=1)
+        plt.plot(qr, qdotr, "go", markersize=1)
+        if render:
+            plt.show()
+        if save_path:
+            plt.savefig(save_path)
+
+    return distance
 
 
 class PhasePlotEnv(gym.Wrapper):
@@ -198,20 +218,16 @@ class PhasePlotEnv(gym.Wrapper):
             if self.strike_num == self.strides:
                 done = True
 
-                distance, ql, qdotl, qr, qdotr = compute_phase_plot_si(
+                distance = phase_plot(
                     self.ql,
                     self.qdotl,
                     self.qr,
                     self.qdotr,
                     skip_strides=self.skip_strides,
+                    render=False,
+                    save_path=os.path.join(self.save_path, "phase_plot.png"),
                 )
                 info["metrics"] = {"phase_plot_index": distance}
-
-                plt.ioff()
-                plt.plot(ql, qdotl, "ro", markersize=1)
-                plt.plot(qr, qdotr, "go", markersize=1)
-                plt.savefig(os.path.join(self.save_path, "phase_plot.png"))
-                # plt.show()
 
         return info, done
 
@@ -253,12 +269,13 @@ if __name__ == "__main__":
                 motor_pos[i][j][k] = state[i * clen + j][0][k]
                 motor_vel[i][j][k] = state[i * clen + j][1][k]
 
-    distance, ql, qdotl, qr, qdotr = compute_phase_plot_si(
-        motor_pos[:, :, 3], motor_vel[:, :, 3], motor_pos[:, :, 8], motor_vel[:, :, 8]
+    distance = phase_plot(
+        motor_pos[:, :, 3],
+        motor_vel[:, :, 3],
+        motor_pos[:, :, 8],
+        motor_vel[:, :, 8],
+        render=False,
+        save_path=sys.argv[1] + "_phase_plot.png",
     )
-    print("Distance %6.3f" % distance)
-    plt.ioff()
-    plt.plot(ql, qdotl, "ro", markersize=1)
-    plt.plot(qr, qdotr, "go", markersize=1)
-    plt.savefig(sys.argv[1] + "_phase_plot.png")
 
+    print("Distance %6.3f" % distance)
