@@ -274,32 +274,27 @@ if __name__ == "__main__":
                 motor_vel[i][j][k] = state[i * clen + j][1][k]
 
     save_dir = os.path.dirname(sys.argv[1])
-
-    ql = (motor_pos[:, :, 3],)
-    qdotl = (motor_vel[:, :, 3],)
-    qr = (motor_pos[:, :, 8],)
-    qdotr = (motor_vel[:, :, 8],)
-
+    
     distance = phase_plot(
-        ql,
-        qdotl,
-        qr,
-        qdotr,
+        motor_pos[:, :, 3],
+        motor_vel[:, :, 3],
+        motor_pos[:, :, 8],
+        motor_vel[:, :, 8],
         render=False,
         save_path=os.path.join(save_dir, "phase_plot.svg"),
     )
 
+    l = motor_pos[:, :, :5].reshape((-1, 5))
+    r = motor_pos[:, :, 5:].reshape((-1, 5))
     metrics = {
         "torque": 0,
-        "joint_angle": compute_si(
-            np.stack([np.stack([ql, qdotl]), np.stack([qr, qdotr])]).transpose(
-                (2, 0, 1)
-            )
-        ),
-        "phase_plot": distance,
+        "joint_angle": compute_si(np.stack([l, r]).transpose((1, 0, 2))),
+        "phase_plot_index": distance,
     }
 
-    print("Distance %6.3f" % distance)
+    print(metrics)
     with open(os.path.join(save_dir, "evaluate.json"), "w") as jfile:
         json.dump(metrics, jfile)
+
+
 
