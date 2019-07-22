@@ -1,6 +1,7 @@
 import torch as th
 import numpy as np
 import copy
+import json
 import os
 import gym
 import gym.wrappers
@@ -273,13 +274,32 @@ if __name__ == "__main__":
                 motor_vel[i][j][k] = state[i * clen + j][1][k]
 
     save_dir = os.path.dirname(sys.argv[1])
+
+    ql = (motor_pos[:, :, 3],)
+    qdotl = (motor_vel[:, :, 3],)
+    qr = (motor_pos[:, :, 8],)
+    qdotr = (motor_vel[:, :, 8],)
+
     distance = phase_plot(
-        motor_pos[:, :, 3],
-        motor_vel[:, :, 3],
-        motor_pos[:, :, 8],
-        motor_vel[:, :, 8],
+        ql,
+        qdotl,
+        qr,
+        qdotr,
         render=False,
         save_path=os.path.join(save_dir, "phase_plot.svg"),
     )
 
+    metrics = {
+        "torque": 0,
+        "joint_angle": compute_si(
+            np.stack([np.stack([ql, qdotl]), np.stack([qr, qdotr])]).transpose(
+                (2, 0, 1)
+            )
+        ),
+        "phase_plot": distance,
+    }
+
     print("Distance %6.3f" % distance)
+    with open(os.path.join(save_dir, "evaluate.json"), "w") as jfile:
+        json.dump(metrics, jfile)
+
