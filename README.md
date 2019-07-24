@@ -1,14 +1,39 @@
 # SymmetricRL
 
+
+## Installation
+
+There is no need for compilation. You can install all requirements using Pip, however, you might prefer to install some manully, including:
+ - [PyTorch](https://pytorch.org/get-started/locally/)
+ - [PyBullet](https://pybullet.org)
+
+
+### Installation using Pip
+```bash
+# TODO: create and activate your virtual env of choice
+
+# download the repo as well as the submodules (including )
+git clone https://github.com/UBCMOCCA/SymmetricRL --recurse-submodules
+
+cd SymmetricRL
+pip install -r requirements  # you might prefer to install some packages (including PyTorch) yourself
+```
+
+There is also a helper script in `setup/setup_cc.sh` that can be used to install the requirements on [Compute Canada](http://computecanada.ca).
+
+
 ## Running Locally
 
 To run an experiment named `test_experiment` with the PyBullet humanoid environment you can run:
 
 ```bash
-./scripts/local_run_playground_train.sh  test_experiment  env_name='Symmetric_HumanoidBulletEnv-v0'
+./scripts/local_run_playground_train.sh  w2_test_experiment  env_name='pybullet_envs:Walker2DBulletEnv-v0'
+
+# run the same experiment with the NET architecture symmetry method (other options include "traj, loss, phase, net2")
+./scripts/local_run_playground_train.sh  w2_net_experiment  env_name='pybullet_envs:Walker2DBulletEnv-v0' mirror_method='net'
 ```
 
-This will create a new experiment directory inside the `runs` directory that contains the following files:
+The `w2_net_experiment` is the name of the experiment. This command will create a new experiment directory inside the `runs` directory that contains the following files:
 
 - `pid`: the process ID of the task running the training algorithm
 - `progress.csv`: a CSV file containing the data about the the training progress
@@ -17,17 +42,24 @@ This will create a new experiment directory inside the `runs` directory that con
 - `run.json`: extra useful stuff about the run including the host information and the git commit ID (only works if GitPython is installed)
 - `models`: a directory containing the saved models
 
+In case you use [Compute Canada](http://computecanada.ca) you also use the other scripts like `cedar_run_playground_train.sh` to create a batch job. These scripts use the same argument sctructure but also allow you to run the same task with multiple replicates using the `num_replicates` variable.
+
+
 ## Plotting Results
 
 The `plot_from_csv.py` script can be helpful for plotting the learning curves:
 
 ```bash
 python -m playground.plot_from_csv --load_paths runs/*/*/  --columns mean_rew max_rew  --smooth 2
+
+# to group the results based on the name
+python -m playground.plot_from_csv --load_paths runs/*/*/  --columns mean_rew max_rew  --name_regex ".*__([^_\/])*" --group 1
 ```
 
 - The `load_paths` argument specifies which directories the script should look into
 - It opens the `progress.csv` file and plots the `columns` as the y-axis and uses the `row` for the x-axis (defaults to `total_num_steps`)
 - You can also provide a `name_regex` to make the figure legends simpler and more readable, e.g. `--name_regex 'walker-(.*)mirror\/'` would turn `runs/2019_07_08__23_53_20__walker-lossmirror/1` to simply `loss`.
+- `group` can be used to aggregate the results of multiple runs of the same experiment into one. `name_regex` is used to specify the groups.
 
 
 ## Running Learned Policy

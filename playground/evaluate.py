@@ -1,3 +1,13 @@
+"""
+Helper script used for evaluating the best learned policy for an existing experiment.
+
+Usage:
+```bash
+# evaluate with 10000 steps
+python -m playground.evaluate with experiment_dir=runs/<EXPERIMENT_DIRECTORY> max_steps=10000
+# with rendering
+python -m playground.evaluate with experiment_dir=runs/<EXPERIMENT_DIRECTORY> render=True
+"""
 import os
 import time
 import json

@@ -1,3 +1,16 @@
+"""
+The main training loop.
+
+The training is usually started using one of the commands in the `scripts` directory.
+
+Usage:
+```bash
+# run an experiment to train the Walker2D environment (PyBullet)
+./scripts/local_run_playground_train.sh  w2_test_experiment  env_name='pybullet_envs:Walker2DBulletEnv-v0'
+
+# run the same experiment with the NET architecture symmetry method (other options include "traj, loss, phase, net2")
+./scripts/local_run_playground_train.sh  w2_net_experiment  env_name='pybullet_envs:Walker2DBulletEnv-v0' mirror_method=net
+"""
 import copy
 import multiprocessing
 import os

@@ -1,3 +1,14 @@
+"""
+Helper script used for rendering the best learned policy for an existing experiment.
+
+Usage:
+```bash
+python -m playground.enjoy with experiment_dir=runs/<EXPERIMENT_DIRECTORY>
+
+# plot the joint positions over time
+python -m playground.evaluate with experiment_dir=runs/<EXPERIMENT_DIRECTORY> plot=True
+```
+"""
 import os
 import time
 from glob import glob
@@ -77,8 +88,17 @@ def main(_config):
     prev_contact = False
     step = 0
 
+    env_dt = getattr(env.unwrapped, "control_step", 1 / 60)
+    start_time = time.time()
+
     while step < max_steps:
         step += 1
+
+        if "Bullet" in args.env_name:
+            env.unwrapped._p.resetDebugVisualizerCamera(
+                3, 0, -5, env.unwrapped.robot.body_xyz
+            )
+
         obs = torch.from_numpy(obs).float().unsqueeze(0)
 
         with torch.no_grad():
@@ -111,6 +131,9 @@ def main(_config):
                 print("Episode reward:", ep_reward)
             ep_reward = 0
             obs = env.reset()
+
+        diff_time = env_dt * step - (time.time() - start_time)
+        time.sleep(max(0, diff_time))
 
     if args.dump:
         import moviepy.editor as mp

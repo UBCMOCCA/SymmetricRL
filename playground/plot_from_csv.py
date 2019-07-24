@@ -1,3 +1,14 @@
+"""
+Helper script used for plotting the learning curves for existing experiments.
+
+Usage:
+```bash
+python -m playground.plot_from_csv --load_paths runs/*/*/  --columns mean_rew max_rew  --smooth 2
+
+# to group the results based on the name
+python -m playground.plot_from_csv --load_paths runs/*/*/  --columns mean_rew max_rew  --name_regex ".*__([^_\/])*" --group 1
+```
+"""
 import pandas as pd
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter1d
