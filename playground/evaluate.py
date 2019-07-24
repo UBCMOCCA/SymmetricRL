@@ -13,7 +13,7 @@ import torch
 from common.envs_utils import make_env
 from common.render_utils import StatsVisualizer
 from common.sacred_utils import ex
-from symmetry.metric_utils import MetricsEnv, PhasePlotEnv
+from symmetry.metric_utils import MetricsEnv
 
 import symmetry.sym_envs
 from symmetry.env_utils import get_env_name_for_method
@@ -63,10 +63,9 @@ def main(_config):
     env = make_env(env_name, render=args.render)
 
     # TODO: assert Walker3D or Bullet
-    env = MetricsEnv(env)
-    env = PhasePlotEnv(
-        env, get_main_joint_name(env_name), args.experiment_dir, dt=1 / 240
-    )
+    dt = 1 / 240
+    # env = MetricsEnv(env, dt=dt)
+    env = MetricsEnv(env, get_main_joint_name(env_name), args.experiment_dir, dt=dt)
     env.seed(1093)
 
     ep_reward = 0
@@ -107,7 +106,7 @@ def main(_config):
             obs = env.reset()
 
     for k, v in metrics.items():
-        metrics[k] = torch.FloatTensor(v).mean().item()
+        metrics[k] = torch.FloatTensor(v).median().item()
         print("%s SI: %6.2f" % (k, metrics[k]))
 
     with open(os.path.join(args.experiment_dir, "evaluate.json"), "w") as eval_file:
