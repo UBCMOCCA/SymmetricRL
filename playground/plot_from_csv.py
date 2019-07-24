@@ -9,8 +9,6 @@ import re
 import os
 import sys
 
-sys.path.append("/home/farzad/devel/SymmetricRL")
-
 from common.plots import Plot, LinePlot, plt, ScatterPlot
 from common.misc_utils import str2bool
 

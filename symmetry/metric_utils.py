@@ -12,6 +12,8 @@ from scipy.ndimage.filters import gaussian_filter1d
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
+MIN_GAIT_LEN = 0.55
+
 
 def compute_si(values):
     """
@@ -36,7 +38,7 @@ def calc_best_distance(l, r):
     """
     best_dist, best_shift = float("inf"), 0
     for shift in range(l.shape[0]):
-        dist = np.linalg.norm(l - np.roll(r, shift), ord=1, axis=1).sum()
+        dist = np.linalg.norm(l - np.roll(r, shift), ord=1, axis=1).mean()
         if dist < best_dist:
             best_dist, best_shift = dist, shift
 
@@ -50,19 +52,19 @@ def compute_msi(values):
     Arguments:
         values: A Nx2xd array where d is num joints/objects and 2 is for left/right
     """
-    l, r = np.array(values).transpose([1, 0, 2])
-
-    w = 50 / (np.linalg.norm(l, ord=1, axis=1) + np.linalg.norm(r, ord=1, axis=1)).sum()
+    # scale by max |v| in each dimension to make the results scale-invariant
+    scale = np.abs(values).max(axis=0).max(axis=0)
+    l, r = np.array(values).transpose([1, 0, 2]) / scale
 
     distance, shift = calc_best_distance(l, r)
 
-    return w * distance
+    return 2 * distance
 
 
 class MetricsEnv(gym.Wrapper):
-    def __init__(self, env):
+    def __init__(self, env, dt):
         super().__init__(env)
-        self.dt = getattr(self, "control_step", 1 / 60)
+        self.dt = dt
         # TODO assert PyBullet or similar
 
     def reset(self, *args, **kwargs):
@@ -82,6 +84,17 @@ class MetricsEnv(gym.Wrapper):
             - set(com_inds)
             - set(self.left_joint_inds)
         )
+        ljoints = [
+            self.unwrapped.robot.ordered_joints[j_ind] for j_ind in self.left_joint_inds
+        ]
+        self.torque_limits = np.array(
+            [
+                self.env.unwrapped.robot.power * j.power_coef
+                if hasattr(j, "power_coef")
+                else j.torque_limit
+                for j in ljoints
+            ]
+        )
         self.prev_contact = True
         self.first_strike = True
         self.reset_metrics()
@@ -95,13 +108,13 @@ class MetricsEnv(gym.Wrapper):
         strike = not self.prev_contact and side_contact
         self.prev_contact = side_contact
 
-        if strike and len(self.metrics["torque"]) * self.dt > 0.5:
+        if strike and len(self.metrics["torque"]) * self.dt > MIN_GAIT_LEN:
             if not self.first_strike:
                 info["metrics"] = {
                     "torque": compute_si(self.metrics["torque"]),
                     "joint_angle": compute_msi(self.metrics["joint_angle"]),
                 }
-                # print(len(self.metrics["torque"]) * self.dt)
+                print(len(self.metrics["torque"]) * self.dt)
             self.first_strike = False
             self.reset_metrics()
         return info
@@ -115,7 +128,10 @@ class MetricsEnv(gym.Wrapper):
     def compute_side_metrics(self, action):
         action = np.array(action)
         self.metrics["torque"].append(
-            [action[self.left_joint_inds], action[self.right_joint_inds]]
+            [
+                action[self.left_joint_inds] * self.torque_limits,
+                action[self.right_joint_inds] * self.torque_limits,
+            ]
         )
         joint_angles = np.array(
             [j.get_position() for j in self.unwrapped.robot.ordered_joints]
@@ -216,7 +232,7 @@ class PhasePlotEnv(gym.Wrapper):
         self.prev_contact = side_contact
         self.steps_since += 1
 
-        if strike and self.steps_since * self.dt > 0.5:
+        if strike and self.steps_since * self.dt > MIN_GAIT_LEN:
             self.steps_since = 0
             self.strike_num += 1
             if self.strike_num == self.strides:
@@ -254,15 +270,20 @@ if __name__ == "__main__":
     import pickle
     import sys
 
+    clen = 1680
+    steps = 20
+
     if len(sys.argv) < 2:
         print("Please provide the states data path")
         sys.exit(1)
 
-    with open(sys.argv[1], "rb") as fp:
+    with open(sys.argv[1][: -len("_torque")], "rb") as fp:
         state = pickle.load(fp)
 
-    clen = 1680
-    steps = 20
+    with open(sys.argv[1], "rb") as fp:
+        torques = np.array(pickle.load(fp)).reshape((steps, clen, 2, 5))
+
+    torque_si = np.mean([compute_si(step_toques) for step_toques in torques])
 
     motor_pos = np.zeros((steps, clen, 10))
     motor_vel = np.zeros((steps, clen, 10))
@@ -274,12 +295,12 @@ if __name__ == "__main__":
                 motor_vel[i][j][k] = state[i * clen + j][1][k]
 
     save_dir = os.path.dirname(sys.argv[1])
-    
+
     distance = phase_plot(
-        motor_pos[:, :, 3],
-        motor_vel[:, :, 3],
-        motor_pos[:, :, 8],
-        motor_vel[:, :, 8],
+        motor_pos[:, :, 2],
+        motor_vel[:, :, 2],
+        motor_pos[:, :, 7],
+        motor_vel[:, :, 7],
         render=False,
         save_path=os.path.join(save_dir, "phase_plot.svg"),
     )
@@ -287,7 +308,7 @@ if __name__ == "__main__":
     l = motor_pos[:, :, :5].reshape((-1, 5))
     r = motor_pos[:, :, 5:].reshape((-1, 5))
     metrics = {
-        "torque": 0,
+        "torque": torque_si,
         "joint_angle": compute_si(np.stack([l, r]).transpose((1, 0, 2))),
         "phase_plot_index": distance,
     }
@@ -295,6 +316,4 @@ if __name__ == "__main__":
     print(metrics)
     with open(os.path.join(save_dir, "evaluate.json"), "w") as jfile:
         json.dump(metrics, jfile)
-
-
 
