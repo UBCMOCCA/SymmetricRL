@@ -1,4 +1,5 @@
-# SymmetricRL
+<h1 align="center">On Learning Symmetric Locomotion</h1>
+This repo contains the code-base for the paper.
 
 
 ## Installation
