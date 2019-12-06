@@ -1,5 +1,4 @@
-<h1 align="center">On Learning Symmetric Locomotion</h1>
-This repo contains the code-base for the paper.
+# On Learning Symmetric Locomotion
 
 
 ## Installation
@@ -102,3 +101,17 @@ The environments that are currently tested and supported:
  - `HumanoidBulletEnv`
  - `Walker3DCustomEnv`
  - `Walker3DStepperEnv`
+
+
+## Citation
+Please cite the following paper if you found our work useful. Thanks!
+> Farzad Adbolhosseini and Hung Yu Ling and Zhaoming Xie and Xue Bin Peng and Michiel van de Panne. "On Learning Symmetric Locomotion", Proc. ACM SIGGRAPH Motion, Interaction, and Games (MIG 2019).
+
+```
+@inproceedings{2019-MIG-symmetry,
+  title={On Learning Symmetric Locomotion},
+  author={Farzad Adbolhosseini and Hung Yu Ling and Zhaoming Xie and Xue Bin Peng and Michiel van de Panne},
+  booktitle = {Proc. ACM SIGGRAPH Motion, Interaction, and Games (MIG 2019)},
+  year={2019}
+}
+```
